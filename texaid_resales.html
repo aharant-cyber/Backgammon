@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seefahrer Backgammon</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:ital,wght@0,400..900;1,400..900&family=Fauna+One&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        parchment: '#e0c99f',
+                        'parchment-dark': '#bfa06d',
+                        brass: '#d4af37',
+                        'brass-dark': '#997a15',
+                        wood: '#2c1609',
+                        'wood-light': '#4a2814',
+                    },
+                    fontFamily: {
+                        cinzel: ['Cinzel', 'serif'],
+                        fauna: ['Fauna One', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0b0705;
+            background-image: 
+                radial-gradient(circle at center, #1f120a 0%, #050302 100%);
+            font-family: 'Fauna One', serif;
+            user-select: none;
+            overflow-x: hidden;
+            perspective: 1200px;
+        }
+
+        h1, h2, h3, .font-cinzel {
+            font-family: 'Cinzel', serif;
+        }
+
+        .board-bg {
+            background-color: #d8be91;
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(245, 225, 185, 0.6) 0%, rgba(175, 140, 90, 0.8) 100%),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Cpath d='M0 0 C 100 50, 200 10, 400 60 L 400 400 C 250 350, 150 390, 0 400 Z' fill='none' stroke='%238a6d3b' stroke-width='0.4' opacity='0.25'/%3E%3Cpath d='M50 0 C 150 120, 280 80, 400 180' fill='none' stroke='%238a6d3b' stroke-width='0.3' stroke-dasharray='3 3' opacity='0.3'/%3E%3Ccircle cx='120' cy='280' r='60' fill='none' stroke='%23705322' stroke-width='0.5' opacity='0.25'/%3E%3Ccircle cx='120' cy='280' r='80' fill='none' stroke='%23705322' stroke-width='0.3' stroke-dasharray='2,2' opacity='0.2'/%3E%3C/svg%3E");
+            box-shadow: inset 0 0 90px rgba(35, 15, 5, 0.95), inset 0 0 20px rgba(0, 0, 0, 0.8);
+        }
+
+        .wood-frame {
+            background: linear-gradient(135deg, #44220f 0%, #220f05 50%, #110702 100%);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.95), 0 0 0 3px #d4af37 inset, inset 0 0 20px rgba(0,0,0,0.8);
+            transform: rotateX(3deg);
+            transform-style: preserve-3d;
+        }
+
+        .brass-btn {
+            background: linear-gradient(180deg, #f3e092 0%, #d4af37 50%, #997a15 100%);
+            color: #1a181b;
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.7);
+            cursor: pointer;
+        }
+        .brass-btn:hover:not(:disabled) {
+            background: linear-gradient(180deg, #fff2b3 0%, #e6c048 50%, #b3901c 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 12px rgba(212, 175, 55, 0.4), inset 0 1px 0 rgba(255,255,255,0.9);
+        }
+        .brass-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(0.8);
+        }
+
+        /* 3D Spielsteine in Holzoptik mit TEXAID & ReSales Branding */
+        .checker {
+            transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.2s ease;
+            cursor: pointer;
+            border-radius: 50%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            transform: translateZ(4px);
+        }
+
+        /* TEXAID (Rot) */
+        .checker-red {
+            background: radial-gradient(circle at 35% 35%, #cc3b3b 0%, #911c1c 55%, #520909 90%, #2e0202 100%);
+            box-shadow: 0 6px 10px rgba(0,0,0,0.85), inset 0 2px 3px rgba(255,180,180,0.5), inset 0 -4px 5px rgba(0,0,0,0.9);
+            border: 2px solid #d4af37;
+            color: #ffffff;
+            font-size: 8px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.9);
+        }
+
+        /* ReSales (Blau) */
+        .checker-brown {
+            background: radial-gradient(circle at 35% 35%, #23528a 0%, #13335c 55%, #081a33 90%, #030a14 100%);
+            box-shadow: 0 6px 10px rgba(0,0,0,0.9), inset 0 2px 3px rgba(160,200,255,0.4), inset 0 -4px 5px rgba(0,0,0,0.95);
+            border: 2px solid #d4af37;
+            color: #ffffff;
+            font-size: 8px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.9);
+        }
+
+        .compass-rose {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 260px;
+            height: 260px;
+            opacity: 0.18;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='%232c1609'%3E%3Cpolygon points='100,10 108,85 100,100 92,85'/%3E%3Cpolygon points='100,190 108,115 100,100 92,115'/%3E%3Cpolygon points='10,100 85,92 100,100 85,108'/%3E%3Cpolygon points='190,100 115,92 100,100 115,108'/%3E%3Cpolygon points='36,36 88,88 100,100 88,88' opacity='0.7'/%3E%3Cpolygon points='164,164 112,112 100,100 112,112' opacity='0.7'/%3E%3Cpolygon points='164,36 112,88 100,100 112,88' opacity='0.7'/%3E%3Cpolygon points='36,164 88,112 100,100 88,112' opacity='0.7'/%3E%3Ccircle cx='100' cy='100' r='75' fill='none' stroke='%232c1609' stroke-width='1'/%3E%3Ccircle cx='100' cy='100' r='82' fill='none' stroke='%232c1609' stroke-width='0.5' stroke-dasharray='2,2'/%3E%3C/g%3E%3C/svg%3E");
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
+
+        .map-decoration-1 {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            width: 110px;
+            height: 110px;
+            opacity: 0.12;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M20,50 Q40,10 80,30 T90,80 Q50,90 20,50 Z' fill='none' stroke='%23000' stroke-width='1'/%3E%3Ctext x='35' y='55' font-size='10' font-family='serif' fill='%23000'%3ETerra Incognita%3C/text%3E%3C/svg%3E");
+            background-size: contain;
+        }
+
+        .map-lines {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.15;
+            background-image: 
+                radial-gradient(circle at 15% 25%, transparent 0%, transparent 80px, #2c1609 81px, transparent 82px),
+                radial-gradient(circle at 85% 75%, transparent 0%, transparent 120px, #2c1609 121px, transparent 122px);
+        }
+
+        .die {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(145deg, #fffdfa, #e6d8c0);
+            border-radius: 8px;
+            box-shadow: 3px 3px 8px rgba(0,0,0,0.6), inset -1px -1px 2px rgba(0,0,0,0.2), inset 1px 1px 2px rgba(255,255,255,0.9);
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            padding: 5px;
+            gap: 2px;
+            border: 1px solid #b39b72;
+            cursor: pointer;
+        }
+        .die-dot {
+            background-color: #2c1609;
+            border-radius: 50%;
+            width: 7px;
+            height: 7px;
+            justify-self: center;
+            align-self: center;
+            box-shadow: inset 0 1px 1px rgba(0,0,0,0.8);
+        }
+    </style>
+</head>
+<body class="min-h-screen text-amber-100 flex flex-col justify-between">
+
+    <header class="w-full bg-wood/90 border-b-2 border-brass px-4 py-3 shadow-2xl flex flex-wrap items-center justify-between z-20">
+        <div class="flex items-center space-x-3">
+            <i class="fa-solid fa-compass text-brass text-2xl"></i>
+            <div>
+                <h1 class="text-xl md:text-2xl font-bold tracking-wider text-brass uppercase drop-shadow-md">Seefahrer Backgammon</h1>
+                <p class="text-xs text-amber-200/80 italic hidden sm:block">TEXAID (Rot) vs. ReSales (Blau) — Max. 5 Steine pro Hafen-Zunge</p>
+            </div>
+        </div>
+
+        <div id="game-status-bar" class="flex items-center space-x-4 my-2 sm:my-0">
+            <div id="turn-indicator" class="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-black/60 border border-brass/40 shadow-inner">
+                <span class="w-3 h-3 rounded-full bg-brass" id="turn-dot"></span>
+                <span id="turn-text" class="text-sm font-cinzel text-amber-200 font-semibold">Würfeln zum Start</span>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-2">
+            <button id="btn-sound" class="px-3 py-1.5 rounded border border-brass/50 bg-wood-light hover:bg-brass/20 text-brass text-sm transition">
+                <i class="fa-solid fa-volume-high" id="sound-icon"></i>
+            </button>
+            <button id="btn-menu" class="brass-btn px-3 py-1.5 rounded text-sm flex items-center space-x-1">
+                <i class="fa-solid fa-bars"></i>
+                <span class="hidden md:inline">Menü</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 flex flex-col lg:flex-row items-center justify-center p-2 sm:p-4 gap-4 max-w-7xl mx-auto w-full">
+        
+        <!-- BACKGAMMON BOARD -->
+        <div class="wood-frame p-3 sm:p-5 rounded-xl w-full max-w-4xl aspect-[1.3/1] relative flex flex-col justify-between select-none">
+            
+            <div class="absolute top-1 left-1 w-6 h-6 border-t-2 border-l-2 border-brass pointer-events-none"></div>
+            <div class="absolute top-1 right-1 w-6 h-6 border-t-2 border-r-2 border-brass pointer-events-none"></div>
+            <div class="absolute bottom-1 left-1 w-6 h-6 border-b-2 border-l-2 border-brass pointer-events-none"></div>
+            <div class="absolute bottom-1 right-1 w-6 h-6 border-b-2 border-r-2 border-brass pointer-events-none"></div>
+
+            <div id="board-container" class="board-bg flex-1 rounded-md relative flex overflow-hidden border border-wood/80 shadow-inner">
+                
+                <div class="compass-rose"></div>
+                <div class="map-decoration-1"></div>
+                <div class="map-lines"></div>
+
+                <!-- LEFT SIDE BOARD -->
+                <div class="w-1/2 h-full flex flex-col justify-between border-r-2 border-wood/70 relative">
+                    <div id="top-left-points" class="h-[42%] w-full flex flex-row"></div>
+                    <div id="bottom-left-points" class="h-[42%] w-full flex flex-row"></div>
+                </div>
+
+                <!-- BAR (CENTER WOODEN DIVIDER) -->
+                <div class="w-[10%] h-full bg-gradient-to-b from-wood-light via-wood to-wood-light border-x-2 border-brass/50 flex flex-col items-center justify-between py-2 z-10 shadow-2xl relative">
+                    <div id="bar-red" class="flex flex-col items-center gap-1 min-h-[60px] w-full"></div>
+
+                    <div class="flex flex-col items-center my-auto gap-2">
+                        <div id="doubling-cube" class="w-9 h-9 sm:w-11 sm:h-11 rounded-md bg-amber-100 border-2 border-brass text-wood font-bold flex items-center justify-center font-cinzel text-base sm:text-lg shadow-lg cursor-pointer hover:scale-105 transition" title="Verdopplungswürfel">
+                            64
+                        </div>
+                        <span class="text-[10px] uppercase font-cinzel text-brass/80 tracking-widest hidden sm:block">Bar</span>
+                    </div>
+
+                    <div id="bar-brown" class="flex flex-col items-center gap-1 min-h-[60px] w-full"></div>
+                </div>
+
+                <!-- RIGHT SIDE BOARD -->
+                <div class="w-1/2 h-full flex flex-col justify-between border-l-2 border-wood/70 relative">
+                    <div id="top-right-points" class="h-[42%] w-full flex flex-row"></div>
+                    <div id="bottom-right-points" class="h-[42%] w-full flex flex-row"></div>
+                </div>
+
+                <!-- BEAR-OFF TRAYS -->
+                <div class="absolute right-0 top-0 bottom-0 w-[6%] bg-black/40 border-l border-brass/30 flex flex-col justify-between p-1 z-10">
+                    <div id="bear-off-red" class="h-[45%] w-full flex flex-col-reverse items-center gap-0.5 overflow-hidden"></div>
+                    <div class="text-[9px] font-cinzel text-brass text-center rotate-90 my-auto hidden sm:block">Zielport</div>
+                    <div id="bear-off-brown" class="h-[45%] w-full flex flex-col items-center gap-0.5 overflow-hidden"></div>
+                </div>
+
+            </div>
+
+            <!-- BOARD CONTROLS / DICE AREA -->
+            <div class="mt-3 flex flex-wrap items-center justify-between gap-2 px-2">
+                <div class="flex items-center space-x-3">
+                    <div id="player-red-info" class="flex items-center space-x-2 px-3 py-1 rounded bg-black/50 border border-brass/30">
+                        <div class="w-5 h-5 rounded-full checker-red text-[7px] flex items-center justify-center font-bold">TEX</div>
+                        <span class="text-xs sm:text-sm font-cinzel font-bold text-amber-200" id="name-red">TEXAID (Rot)</span>
+                        <span class="text-xs bg-brass/20 text-brass px-1.5 py-0.5 rounded" id="score-red">0 Off</span>
+                    </div>
+                    <div id="player-brown-info" class="flex items-center space-x-2 px-3 py-1 rounded bg-black/50 border border-brass/30 opacity-60">
+                        <div class="w-5 h-5 rounded-full checker-brown text-[6px] flex items-center justify-center font-bold">RES</div>
+                        <span class="text-xs sm:text-sm font-cinzel font-bold text-amber-200" id="name-brown">ReSales (Blau)</span>
+                        <span class="text-xs bg-brass/20 text-brass px-1.5 py-0.5 rounded" id="score-brown">0 Off</span>
+                    </div>
+                </div>
+
+                <div id="dice-container" class="flex items-center space-x-3 min-h-[46px] px-4 py-1 bg-black/40 rounded-lg border border-brass/30">
+                    <div id="dice-area" class="flex items-center space-x-2">
+                        <span class="text-xs text-amber-200/60 italic font-cinzel">Würfel bereit...</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <button id="btn-roll" class="brass-btn px-4 py-2 rounded text-sm flex items-center space-x-2">
+                        <i class="fa-solid fa-dice"></i>
+                        <span>Würfeln</span>
+                    </button>
+                    <button id="btn-undo" class="px-3 py-2 rounded bg-wood-light hover:bg-amber-900 border border-brass/40 text-amber-200 text-sm transition" disabled title="Zug rückgängig">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </button>
+                    <button id="btn-end-turn" class="px-3 py-2 rounded bg-emerald-900/80 hover:bg-emerald-800 border border-emerald-500/50 text-emerald-100 text-sm transition font-cinzel hidden">
+                        <span>Zug Beenden</span>
+                        <i class="fa-solid fa-check ml-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <aside class="w-full lg:w-80 flex flex-col gap-3">
+            
+            <div class="wood-frame p-4 rounded-xl border border-brass/40 shadow-xl">
+                <h3 class="font-cinzel text-brass font-bold text-base border-b border-brass/30 pb-2 mb-3 flex justify-between items-center">
+                    <span><i class="fa-solid fa-anchor mr-2"></i>Kajüte & Raum</span>
+                    <span id="game-mode-badge" class="text-xs px-2 py-0.5 rounded bg-brass/20 text-brass font-sans">Lokal</span>
+                </h3>
+
+                <div id="online-room-info" class="hidden space-y-3">
+                    <div class="flex items-center justify-between bg-black/50 p-2 rounded border border-brass/20">
+                        <span class="text-xs text-amber-200/70">Raum-Code:</span>
+                        <span id="room-code-display" class="font-mono text-lg font-bold text-brass tracking-wider">------</span>
+                        <button id="btn-copy-code" class="text-xs bg-brass/20 hover:bg-brass/40 text-brass px-2 py-1 rounded transition">
+                            <i class="fa-solid fa-copy"></i>
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-amber-200/60 leading-tight">Teile diesen Code mit einem Freund, um gemeinsam auf der Seekarte zu spielen.</p>
+                </div>
+
+                <div id="offline-room-info" class="text-xs text-amber-200/80 space-y-2">
+                    <p>Du spielst aktuell lokal auf einem Gerät oder gegen die KI.</p>
+
+                    <div class="p-2 bg-amber-950/50 rounded border border-brass/30 text-[11px] text-amber-200/90 mt-2">
+                        <i class="fa-solid fa-shield-halved text-brass mr-1"></i>
+                        <strong>Sonderregel aktiv:</strong> Max. 5 Steine pro Hafen-Zunge!
+                    </div>
+
+                    <button id="btn-open-multiplayer" class="w-full brass-btn py-1.5 rounded text-xs mt-2">
+                        <i class="fa-solid fa-globe mr-1"></i> Online-Raum Erstellen
+                    </button>
+                </div>
+            </div>
+
+            <div class="wood-frame p-4 rounded-xl border border-brass/40 shadow-xl flex-1 flex flex-col h-64 lg:h-80">
+                <h3 class="font-cinzel text-brass font-bold text-sm border-b border-brass/30 pb-2 mb-2 flex items-center justify-between">
+                    <span><i class="fa-solid fa-scroll mr-2"></i>Logbuch</span>
+                </h3>
+
+                <div id="chat-messages" class="flex-1 overflow-y-auto space-y-2 text-xs pr-1 mb-3 bg-black/40 p-2 rounded border border-brass/10">
+                    <div class="text-amber-200/70 italic text-[11px]">Ahoi! TEXAID (Rot) und ReSales (Blau) bereit zum Segeln!</div>
+                </div>
+
+                <form id="chat-form" class="flex gap-2">
+                    <input type="text" id="chat-input" placeholder="Nachricht schreiben..." class="flex-1 bg-black/60 border border-brass/30 rounded px-2 py-1.5 text-xs text-amber-100 focus:outline-none focus:border-brass">
+                    <button type="submit" class="brass-btn px-3 py-1.5 rounded text-xs">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+
+        </aside>
+
+    </main>
+
+    <div id="modal-menu" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="wood-frame max-w-md w-full p-6 rounded-xl border-2 border-brass shadow-2xl relative">
+            <button id="btn-close-modal" class="absolute top-3 right-3 text-amber-200/60 hover:text-brass text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <h2 class="font-cinzel text-2xl font-bold text-brass text-center mb-6 border-b border-brass/30 pb-3">
+                <i class="fa-solid fa-ship mr-2"></i>Seefahrer Menü
+            </h2>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-cinzel text-brass mb-2">Spielmodus Wählen</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button id="mode-local" class="mode-btn p-3 rounded border border-brass/30 bg-black/40 hover:bg-brass/20 text-center transition">
+                            <i class="fa-solid fa-users text-lg text-brass block mb-1"></i>
+                            <span class="text-xs font-cinzel block">Pass & Play</span>
+                        </button>
+                        <button id="mode-ai" class="mode-btn p-3 rounded border border-brass/30 bg-black/40 hover:bg-brass/20 text-center transition">
+                            <i class="fa-solid fa-robot text-lg text-brass block mb-1"></i>
+                            <span class="text-xs font-cinzel block">Gegen KI</span>
+                        </button>
+                        <button id="mode-online" class="mode-btn p-3 rounded border border-brass/30 bg-black/40 hover:bg-brass/20 text-center transition">
+                            <i class="fa-solid fa-globe text-lg text-brass block mb-1"></i>
+                            <span class="text-xs font-cinzel block">Online</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="online-settings" class="hidden space-y-3 pt-3 border-t border-brass/20">
+                    <div>
+                        <label class="block text-xs text-amber-200/80 mb-1">Einen Raum erstellen oder beitreten</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="room-code-input" placeholder="Raum-Code eingeben..." class="flex-1 bg-black/60 border border-brass/40 rounded px-3 py-2 text-sm text-amber-100 font-mono tracking-wider focus:outline-none focus:border-brass">
+                            <button id="btn-join-room" class="brass-btn px-4 py-2 rounded text-xs">Beitreten</button>
+                        </div>
+                    </div>
+                    <div class="text-center py-1">
+                        <span class="text-xs text-amber-200/50 uppercase font-cinzel">oder</span>
+                    </div>
+                    <button id="btn-create-room" class="w-full brass-btn py-2 rounded text-sm flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Neuen Raum Erstellen</span>
+                    </button>
+                </div>
+
+                <div class="pt-4 border-t border-brass/30 flex gap-2">
+                    <button id="btn-restart" class="w-full py-2.5 rounded bg-red-950 hover:bg-red-900 border border-red-500/40 text-amber-100 font-cinzel text-sm transition">
+                        <i class="fa-solid fa-arrows-rotate mr-2"></i>Neues Spiel Starten
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-winner" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="wood-frame max-w-sm w-full p-6 rounded-xl border-2 border-brass text-center shadow-2xl space-y-4">
+            <i class="fa-solid fa-trophy text-5xl text-brass animate-bounce"></i>
+            <h2 id="winner-title" class="font-cinzel text-2xl font-bold text-brass">Sieg auf hoher See!</h2>
+            <p id="winner-text" class="text-sm text-amber-200">Die Besatzung hat alle Steine erfolgreich in den Heimathafen gebracht.</p>
+            <button id="btn-winner-restart" class="w-full brass-btn py-2.5 rounded text-sm font-bold mt-4">
+                Neues Abenteuer Starten
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+            playDiceRoll() {
+                if (this.muted) return;
+                this.init();
+
+                const rollsCount = 6 + Math.floor(Math.random() * 3);
+                for (let i = 0; i < rollsCount; i++) {
+                    const delay = (i * 0.04) + (Math.random() * 0.02);
+                    setTimeout(() => {
+                        if (!this.ctx) return;
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        
+                        osc.type = Math.random() > 0.5 ? 'triangle' : 'sine';
+                        osc.frequency.setValueAtTime(120 + Math.random() * 220, this.ctx.currentTime);
+                        osc.frequency.exponentialRampToValueAtTime(35, this.ctx.currentTime + 0.04);
+                        
+                        gain.gain.setValueAtTime(0.25 * (1 - i / rollsCount), this.ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
+
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+
+                        osc.start();
+                        osc.stop(this.ctx.currentTime + 0.05);
+                    }, delay * 1000);
+                }
+            }
+            playMove() {
+                if (this.muted) return;
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(200, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.1);
+            }
+            playHit() {
+                if (this.muted) return;
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(280, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(50, this.ctx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.2);
+            }
+            playWin() {
+                if (this.muted) return;
+                this.init();
+                const notes = [261.63, 329.63, 392.00, 523.25];
+                notes.forEach((freq, idx) => {
+                    setTimeout(() => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                        gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start();
+                        osc.stop(this.ctx.currentTime + 0.4);
+                    }, idx * 120);
+                });
+            }
+        }
+
+        const sound = new SoundEngine();
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'seefahrer-backgammon';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        
+        let app, auth, db;
+        let currentUser = null;
+        let currentRoomId = null;
+        let roomUnsubscribe = null;
+
+        if (firebaseConfig) {
+            try {
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                const initAuth = async () => {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                };
+                initAuth().catch(console.error);
+
+                onAuthStateChanged(auth, (user) => {
+                    currentUser = user;
+                });
+            } catch (e) {
+                console.warn("Firebase Initialisierungsfehler:", e);
+            }
+        }
+
+        const PLAYER_RED = 'RED';
+        const PLAYER_BROWN = 'BROWN';
+        const MAX_STACK_SIZE = 5; // Sonderregel: Maximal 5 Steine pro Hafen-Zunge
+
+        let gameState = {
+            board: Array(25).fill(null),
+            bar: { RED: 0, BROWN: 0 },
+            bearOff: { RED: 0, BROWN: 0 },
+            turn: PLAYER_RED,
+            dice: [],
+            rawDice: [],
+            history: [],
+            gameMode: 'LOCAL',
+            playerColor: PLAYER_RED
+        };
+
+        function isHomeBoard(pointNum, player) {
+            if (player === PLAYER_RED) {
+                return pointNum >= 1 && pointNum <= 6;
+            } else {
+                return pointNum >= 19 && pointNum <= 24;
+            }
+        }
+
+        function updateUIControls() {
+            const turnDot = document.getElementById('turn-dot');
+            const turnText = document.getElementById('turn-text');
+            const btnRoll = document.getElementById('btn-roll');
+            const btnUndo = document.getElementById('btn-undo');
+            const btnEndTurn = document.getElementById('btn-end-turn');
+            const redInfo = document.getElementById('player-red-info');
+            const brownInfo = document.getElementById('player-brown-info');
+
+            const isRedTurn = gameState.turn === PLAYER_RED;
+            turnText.innerText = isRedTurn ? "TEXAID (Rot) am Zug" : "ReSales (Blau) am Zug";
+            turnDot.className = `w-3 h-3 rounded-full ${isRedTurn ? 'bg-red-500' : 'bg-blue-500'}`;
+
+            if (isRedTurn) {
+                redInfo.classList.remove('opacity-65', 'border-brass/30');
+                redInfo.classList.add('border-brass', 'shadow-lg');
+                brownInfo.classList.add('opacity-65');
+                brownInfo.classList.remove('border-brass', 'shadow-lg');
+            } else {
+                brownInfo.classList.remove('opacity-65', 'border-brass/30');
+                brownInfo.classList.add('border-brass', 'shadow-lg');
+                redInfo.classList.add('opacity-65');
+                redInfo.classList.remove('border-brass', 'shadow-lg');
+            }
+
+            const canRoll = gameState.dice.length === 0;
+            btnRoll.disabled = !canRoll || (gameState.gameMode === 'ONLINE' && gameState.turn !== gameState.playerColor);
+            btnUndo.disabled = gameState.history.length <= 1;
+
+            if (gameState.dice.length === 0) {
+                btnEndTurn.classList.add('hidden');
+            } else {
+                btnEndTurn.classList.remove('hidden');
+            }
+        }
+
+        function syncOnlineState() {
+            if (gameState.gameMode === 'ONLINE' && currentRoomId && db && auth && auth.currentUser) {
+                const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
+                updateDoc(roomRef, {
+                    gameState: JSON.stringify(gameState),
+                    updatedAt: Date.now()
+                }).catch(err => console.error("Sync Fehler:", err));
+            }
+        }
+
+        function subscribeToRoom(code) {
+            if (!db) return;
+            if (roomUnsubscribe) roomUnsubscribe();
+
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', code);
+            roomUnsubscribe = onSnapshot(roomRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.chat) {
+                        renderChat(data.chat);
+                    }
+                    if (data.gameState && data.updatedAt) {
+                        const remoteState = JSON.parse(data.gameState);
+                        if (remoteState.turn !== gameState.turn || JSON.stringify(remoteState.board) !== JSON.stringify(gameState.board)) {
+                            gameState = remoteState;
+                            renderBoard();
+                            renderDiceUI();
+                            updateUIControls();
+                        }
+                    }
+                }
+            });
+        }
+
+        function initBoardState() {
+            const board = Array(25).fill(null).map(() => ({ player: null, count: 0 }));
+            
+            // Korrekte Grundstellung gemäß Regelschema:
+            // GOLD / TEXAID (Rot): Startet auf 24 (2), 13 (5), 8 (3), 6 (5) -> Ziel 1-6
+            board[24] = { player: PLAYER_RED, count: 2 };
+            board[13] = { player: PLAYER_RED, count: 5 };
+            board[8]  = { player: PLAYER_RED, count: 3 };
+            board[6]  = { player: PLAYER_RED, count: 5 };
+
+            // EBONY / ReSales (Blau): Startet auf 1 (2), 12 (5), 17 (3), 19 (5) -> Ziel 19-24
+            board[1]  = { player: PLAYER_BROWN, count: 2 };
+            board[12] = { player: PLAYER_BROWN, count: 5 };
+            board[17] = { player: PLAYER_BROWN, count: 3 };
+            board[19] = { player: PLAYER_BROWN, count: 5 };
+
+            gameState.board = board;
+            gameState.bar = { RED: 0, BROWN: 0 };
+            gameState.bearOff = { RED: 0, BROWN: 0 };
+            gameState.turn = PLAYER_RED;
+            gameState.dice = [];
+            gameState.rawDice = [];
+            gameState.history = [];
+            
+            saveHistoryState();
+            renderBoard();
+            renderDiceUI();
+            updateUIControls();
+        }
+
+        function saveHistoryState() {
+            gameState.history.push(JSON.stringify({
+                board: gameState.board,
+                bar: gameState.bar,
+                bearOff: gameState.bearOff,
+                dice: gameState.dice
+            }));
+            if (gameState.history.length > 10) gameState.history.shift();
+        }
+
+        function undoLastMove() {
+            if (gameState.history.length <= 1) return;
+            gameState.history.pop();
+            const previous = JSON.parse(gameState.history[gameState.history.length - 1]);
+            gameState.board = previous.board;
+            gameState.bar = previous.bar;
+            gameState.bearOff = previous.bearOff;
+            gameState.dice = previous.dice;
+            renderBoard();
+            renderDiceUI();
+            updateUIControls();
+            syncOnlineState();
+        }
+
+        function createPointSVG(isTop, isLight) {
+            const fillColor = isLight ? '#cbb185' : '#732d28';
+            const strokeColor = '#2c1609';
+            return `
+                <svg viewBox="0 0 40 160" preserveAspectRatio="none" class="w-full h-full pointer-events-none">
+                    <polygon points="${isTop ? '0,0 40,0 20,150' : '0,160 40,160 20,10'}" 
+                             fill="${fillColor}" stroke="${strokeColor}" stroke-width="1.5"/>
+                </svg>
+            `;
+        }
+
+        function renderBoard() {
+            const topLeft = document.getElementById('top-left-points');
+            const topRight = document.getElementById('top-right-points');
+            const bottomLeft = document.getElementById('bottom-left-points');
+            const bottomRight = document.getElementById('bottom-right-points');
+
+            topLeft.innerHTML = '';
+            topRight.innerHTML = '';
+            bottomLeft.innerHTML = '';
+            bottomRight.innerHTML = '';
+
+            for (let i = 13; i <= 18; i++) topLeft.appendChild(renderPointElement(i, true));
+            for (let i = 19; i <= 24; i++) topRight.appendChild(renderPointElement(i, true));
+            for (let i = 12; i >= 7; i--) bottomLeft.appendChild(renderPointElement(i, false));
+            for (let i = 6; i >= 1; i--) bottomRight.appendChild(renderPointElement(i, false));
+
+            renderBarAndBearOff();
+        }
+
+        function renderPointElement(pointNum, isTop) {
+            const pointDiv = document.createElement('div');
+            const isLight = pointNum % 2 === 0;
+            const data = gameState.board[pointNum];
+
+            pointDiv.className = `relative flex-1 h-full flex ${isTop ? 'flex-col justify-start' : 'flex-col-reverse justify-start'} items-center cursor-pointer group`;
+            pointDiv.dataset.point = pointNum;
+
+            const svgBg = document.createElement('div');
+            svgBg.className = 'absolute inset-0 z-0 pointer-events-none opacity-90';
+            svgBg.innerHTML = createPointSVG(isTop, isLight);
+            pointDiv.appendChild(svgBg);
+
+            const numLabel = document.createElement('span');
+            numLabel.className = `absolute ${isTop ? 'top-0.5' : 'bottom-0.5'} text-[9px] font-cinzel text-amber-950/70 z-0 font-bold pointer-events-none`;
+            numLabel.innerText = pointNum;
+            pointDiv.appendChild(numLabel);
+
+            if (data && data.count > 0) {
+                const checkerContainer = document.createElement('div');
+                checkerContainer.className = `z-20 flex ${isTop ? 'flex-col' : 'flex-col-reverse'} items-center w-full pt-2 pb-2 gap-0.5 max-h-full overflow-hidden pointer-events-none`;
+
+                for (let c = 0; c < data.count; c++) {
+                    const checker = document.createElement('div');
+                    checker.className = `w-6 h-6 sm:w-8 sm:h-8 md:w-9 md:h-9 checker ${data.player === PLAYER_RED ? 'checker-red' : 'checker-brown'}`;
+                    checker.innerText = data.player === PLAYER_RED ? 'TEXAID' : 'ReSales';
+                    checkerContainer.appendChild(checker);
+                }
+                pointDiv.appendChild(checkerContainer);
+            }
+
+            pointDiv.addEventListener('click', () => handlePointClick(pointNum));
+            return pointDiv;
+        }
+
+        function renderBarAndBearOff() {
+            const barRed = document.getElementById('bar-red');
+            const barBrown = document.getElementById('bar-brown');
+            barRed.innerHTML = '';
+            barBrown.innerHTML = '';
+
+            for (let i = 0; i < gameState.bar.RED; i++) {
+                const c = document.createElement('div');
+                c.className = `w-7 h-7 sm:w-8 sm:h-8 checker checker-red`;
+                c.innerText = 'TEX';
+                c.addEventListener('click', () => handleBarClick(PLAYER_RED));
+                barRed.appendChild(c);
+            }
+            for (let i = 0; i < gameState.bar.BROWN; i++) {
+                const c = document.createElement('div');
+                c.className = `w-7 h-7 sm:w-8 sm:h-8 checker checker-brown`;
+                c.innerText = 'RES';
+                c.addEventListener('click', () => handleBarClick(PLAYER_BROWN));
+                barBrown.appendChild(c);
+            }
+
+            const bearRed = document.getElementById('bear-off-red');
+            const bearBrown = document.getElementById('bear-off-brown');
+            bearRed.innerHTML = '';
+            bearBrown.innerHTML = '';
+
+            for (let i = 0; i < gameState.bearOff.RED; i++) {
+                const barPiece = document.createElement('div');
+                barPiece.className = 'w-5 h-2 rounded bg-red-700 border border-brass shadow';
+                bearRed.appendChild(barPiece);
+            }
+            for (let i = 0; i < gameState.bearOff.BROWN; i++) {
+                const barPiece = document.createElement('div');
+                barPiece.className = 'w-5 h-2 rounded bg-blue-900 border border-amber-700 shadow';
+                bearBrown.appendChild(barPiece);
+            }
+
+            document.getElementById('score-red').innerText = `${gameState.bearOff.RED} Off`;
+            document.getElementById('score-brown').innerText = `${gameState.bearOff.BROWN} Off`;
+        }
+
+        function rollDice() {
+            if (gameState.dice.length > 0) return;
+            if (gameState.gameMode === 'ONLINE' && gameState.turn !== gameState.playerColor) return;
+
+            const d1 = Math.floor(Math.random() * 6) + 1;
+            const d2 = Math.floor(Math.random() * 6) + 1;
+
+            if (d1 === d2) {
+                gameState.dice = [d1, d1, d1, d1];
+            } else {
+                gameState.dice = [d1, d2];
+            }
+            gameState.rawDice = [...gameState.dice];
+
+            sound.playDiceRoll();
+            addLog(`${gameState.turn === PLAYER_RED ? 'TEXAID' : 'ReSales'} würfelt: ${gameState.dice.join(', ')}`);
+            
+            saveHistoryState();
+            renderDiceUI();
+            updateUIControls();
+            syncOnlineState();
+
+            if (!hasAnyLegalMoves()) {
+                setTimeout(() => {
+                    addLog(`Keine gültigen Züge möglich. Zug wechselt.`);
+                    endTurn();
+                }, 1200);
+            } else if (gameState.gameMode === 'AI' && gameState.turn === PLAYER_BROWN) {
+                setTimeout(handleAIMove, 1000);
+            }
+        }
+
+        function swapDiceOrder() {
+            if (gameState.dice.length >= 2) {
+                const temp = gameState.dice[0];
+                gameState.dice[0] = gameState.dice[1];
+                gameState.dice[1] = temp;
+                renderDiceUI();
+                addLog(`Würfelreihenfolge getauscht: ${gameState.dice.join(', ')}`);
+            }
+        }
+
+        function renderDiceUI() {
+            const area = document.getElementById('dice-area');
+            area.innerHTML = '';
+
+            if (gameState.dice.length === 0) {
+                area.innerHTML = `<span class="text-xs text-amber-200/60 italic font-cinzel">Würfel bereit...</span>`;
+                return;
+            }
+
+            gameState.dice.forEach((val, idx) => {
+                const die = document.createElement('div');
+                const isActive = idx === 0;
+                die.className = `die ${isActive ? 'ring-2 ring-brass scale-105' : 'opacity-70 hover:opacity-100'} transition-all`;
+                die.title = "Klicken, um Würfelreihenfolge zu tauschen";
+
+                const dotPositions = {
+                    1: [4],
+                    2: [0, 8],
+                    3: [0, 4, 8],
+                    4: [0, 2, 6, 8],
+                    5: [0, 2, 4, 6, 8],
+                    6: [0, 2, 3, 5, 6, 8]
+                };
+
+                for (let cell = 0; cell < 9; cell++) {
+                    const dot = document.createElement('div');
+                    if (dotPositions[val].includes(cell)) {
+                        dot.className = 'die-dot';
+                    }
+                    die.appendChild(dot);
+                }
+
+                die.addEventListener('click', swapDiceOrder);
+                area.appendChild(die);
+            });
+        }
+
+        function handleBarClick(player) {
+            if (gameState.turn !== player) return;
+            if (gameState.bar[player] === 0) return;
+            if (gameState.dice.length === 0) return;
+
+            const dieVal = gameState.dice[0];
+            const targetPoint = player === PLAYER_RED ? 25 - dieVal : dieVal;
+
+            if (canMoveToPoint(targetPoint, player)) {
+                executeMove(`BAR_${player}`, targetPoint);
+            } else {
+                addLog(`Zug von der Bar mit Würfel (${dieVal}) nicht möglich.`);
+            }
+        }
+
+        function handlePointClick(pointNum) {
+            if (gameState.dice.length === 0) return;
+            if (gameState.gameMode === 'ONLINE' && gameState.turn !== gameState.playerColor) return;
+
+            const player = gameState.turn;
+
+            if (gameState.bar[player] > 0) {
+                handleBarClick(player);
+                return;
+            }
+
+            const pointData = gameState.board[pointNum];
+            if (!pointData || pointData.player !== player || pointData.count === 0) return;
+
+            const dieVal = gameState.dice[0];
+            const direction = player === PLAYER_RED ? -1 : 1;
+            const targetPoint = pointNum + (dieVal * direction);
+
+            if (targetPoint >= 1 && targetPoint <= 24) {
+                if (canMoveToPoint(targetPoint, player)) {
+                    executeMove(pointNum, targetPoint);
+                } else {
+                    addLog(`Zug auf Feld ${targetPoint} blockiert (Max. 5 Steine pro Hafen-Zunge!).`);
+                }
+            } else if (canBearOff(player)) {
+                if ((player === PLAYER_RED && targetPoint < 1) || (player === PLAYER_BROWN && targetPoint > 24)) {
+                    if (isExactOrHighestForBearOff(pointNum, dieVal, player)) {
+                        executeMove(pointNum, 'BEAR_OFF');
+                    } else {
+                        addLog(`Auswürfeln mit Würfel (${dieVal}) nicht erlaubt.`);
+                    }
+                }
+            }
+        }
+
+        // SONDERREGEL: Max 5 Steine pro Hafen-Zunge (nur im inneren Feld)
+        function canMoveToPoint(targetPoint, player) {
+            const target = gameState.board[targetPoint];
+            if (target.player === null) return true;
+            if (target.player === player) {
+                if (isHomeBoard(targetPoint, player)) {
+                    return target.count < MAX_STACK_SIZE;
+                }
+                return true; // Keine Beschränkung außerhalb des Hafens
+            }
+            return target.count === 1;
+        }
+
+        function canBearOff(player) {
+            if (gameState.bar[player] > 0) return false;
+
+            if (player === PLAYER_RED) {
+                for (let i = 7; i <= 24; i++) {
+                    if (gameState.board[i].player === PLAYER_RED && gameState.board[i].count > 0) return false;
+                }
+            } else {
+                for (let i = 1; i <= 18; i++) {
+                    if (gameState.board[i].player === PLAYER_BROWN && gameState.board[i].count > 0) return false;
+                }
+            }
+            return true;
+        }
+
+        function isExactOrHighestForBearOff(fromPoint, dieVal, player) {
+            if (player === PLAYER_RED) {
+                if (fromPoint - dieVal === 0) return true;
+                for (let i = 6; i > fromPoint; i--) {
+                    if (gameState.board[i].player === PLAYER_RED && gameState.board[i].count > 0) return false;
+                }
+                return true;
+            } else {
+                if (fromPoint + dieVal === 25) return true;
+                for (let i = 19; i < fromPoint; i++) {
+                    if (gameState.board[i].player === PLAYER_BROWN && gameState.board[i].count > 0) return false;
+                }
+                return true;
+            }
+        }
+
+        function executeMove(from, to) {
+            const player = gameState.turn;
+            let usedDieValue = 0;
+
+            if (typeof from === 'string' && from.startsWith('BAR')) {
+                gameState.bar[player]--;
+                usedDieValue = player === PLAYER_RED ? 25 - to : to;
+            } else {
+                gameState.board[from].count--;
+                if (gameState.board[from].count === 0) gameState.board[from].player = null;
+
+                if (to === 'BEAR_OFF') {
+                    usedDieValue = player === PLAYER_RED ? from : 25 - from;
+                } else {
+                    usedDieValue = Math.abs(to - from);
+                }
+            }
+
+            let diceIndex = gameState.dice.indexOf(usedDieValue);
+            if (diceIndex === -1 && to === 'BEAR_OFF') {
+                diceIndex = gameState.dice.findIndex(d => d >= usedDieValue);
+                if (diceIndex === -1) diceIndex = 0;
+            }
+            if (diceIndex !== -1) {
+                gameState.dice.splice(diceIndex, 1);
+            }
+
+            if (to === 'BEAR_OFF') {
+                gameState.bearOff[player]++;
+                sound.playMove();
+                addLog(`${player === PLAYER_RED ? 'TEXAID' : 'ReSales'} bringt einen Stein in den Zielhafen.`);
+            } else {
+                const target = gameState.board[to];
+                if (target.player !== null && target.player !== player && target.count === 1) {
+                    const opponent = target.player;
+                    gameState.bar[opponent]++;
+                    target.player = player;
+                    target.count = 1;
+                    sound.playHit();
+                    addLog(`${player === PLAYER_RED ? 'TEXAID' : 'ReSales'} schlägt einen gegnerischen Stein!`);
+                } else {
+                    target.player = player;
+                    target.count++;
+                    sound.playMove();
+                }
+            }
+
+            saveHistoryState();
+            renderBoard();
+            renderDiceUI();
+            updateUIControls();
+
+            if (gameState.bearOff[player] >= 15) {
+                triggerWin(player);
+                return;
+            }
+
+            if (gameState.dice.length === 0) {
+                setTimeout(endTurn, 500);
+            } else if (!hasAnyLegalMoves()) {
+                setTimeout(() => {
+                    addLog(`Keine weiteren Züge möglich.`);
+                    endTurn();
+                }, 800);
+            } else if (gameState.gameMode === 'AI' && gameState.turn === PLAYER_BROWN) {
+                setTimeout(handleAIMove, 800);
+            }
+
+            syncOnlineState();
+        }
+
+        function hasAnyLegalMoves() {
+            if (gameState.dice.length === 0) return false;
+            const player = gameState.turn;
+
+            if (gameState.bar[player] > 0) {
+                const dieVal = gameState.dice[0];
+                const targetPoint = player === PLAYER_RED ? 25 - dieVal : dieVal;
+                return canMoveToPoint(targetPoint, player);
+            }
+
+            const dieVal = gameState.dice[0];
+            const direction = player === PLAYER_RED ? -1 : 1;
+
+            for (let i = 1; i <= 24; i++) {
+                if (gameState.board[i].player === player && gameState.board[i].count > 0) {
+                    const targetPoint = i + (dieVal * direction);
+                    if (targetPoint >= 1 && targetPoint <= 24 && canMoveToPoint(targetPoint, player)) {
+                        return true;
+                    } else if (canBearOff(player)) {
+                        if ((player === PLAYER_RED && targetPoint < 1 && isExactOrHighestForBearOff(i, dieVal, player)) ||
+                            (player === PLAYER_BROWN && targetPoint > 24 && isExactOrHighestForBearOff(i, dieVal, player))) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        function endTurn() {
+            gameState.turn = gameState.turn === PLAYER_RED ? PLAYER_BROWN : PLAYER_RED;
+            gameState.dice = [];
+            gameState.rawDice = [];
+
+            renderBoard();
+            renderDiceUI();
+            updateUIControls();
+            syncOnlineState();
+
+            addLog(`Zug beendet. ${gameState.turn === PLAYER_RED ? 'TEXAID (Rot)' : 'ReSales (Blau)'} ist an der Reihe.`);
+
+            if (gameState.gameMode === 'AI' && gameState.turn === PLAYER_BROWN) {
+                setTimeout(rollDice, 1000);
+            }
+        }
+
+        function handleAIMove() {
+            if (gameState.turn !== PLAYER_BROWN || gameState.dice.length === 0) return;
+
+            let fromPoint = null;
+            let targetPoint = null;
+            const dieVal = gameState.dice[0];
+
+            if (gameState.bar[PLAYER_BROWN] > 0) {
+                fromPoint = 'BAR_BROWN';
+                targetPoint = dieVal;
+            } else {
+                for (let i = 24; i >= 1; i--) {
+                    if (gameState.board[i].player === PLAYER_BROWN && gameState.board[i].count > 0) {
+                        const tp = i + dieVal;
+                        if (tp <= 24 && canMoveToPoint(tp, PLAYER_BROWN)) {
+                            fromPoint = i;
+                            targetPoint = tp;
+                            break;
+                        } else if (canBearOff(PLAYER_BROWN) && tp > 24 && isExactOrHighestForBearOff(i, dieVal, PLAYER_BROWN)) {
+                            fromPoint = i;
+                            targetPoint = 'BEAR_OFF';
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (fromPoint !== null && targetPoint !== null) {
+                executeMove(fromPoint, targetPoint);
+            } else {
+                endTurn();
+            }
+        }
+
+        async function createOnlineRoom() {
+            if (!db || !auth || !auth.currentUser) {
+                alert("Online-Modus erfordert eine Firebase-Verbindung.");
+                return;
+            }
+            const code = Math.floor(100000 + Math.random() * 900000).toString();
+            currentRoomId = code;
+            
+            try {
+                const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
+                const initialRoomData = {
+                    roomId: code,
+                    host: auth.currentUser.uid,
+                    gameState: JSON.stringify(gameState),
+                    chat: [ { sender: 'System', text: 'Neuer Online-Raum erstellt.' } ],
+                    updatedAt: Date.now()
+                };
+
+                await setDoc(roomRef, initialRoomData);
+                gameState.gameMode = 'ONLINE';
+                gameState.playerColor = PLAYER_RED;
+                
+                subscribeToRoom(currentRoomId);
+                updateOnlineRoomUI(code);
+                closeModal();
+                addLog(`Online-Raum ${code} erstellt. Du bist TEXAID (Rot).`);
+            } catch (err) {
+                console.error("Fehler beim Erstellen des Raumes:", err);
+                alert("Fehler beim Erstellen des Online-Raumes.");
+            }
+        }
+
+        async function joinOnlineRoom(code) {
+            if (!db) return;
+            try {
+                const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', code);
+                const docSnap = await getDoc(roomRef);
+
+                if (!docSnap.exists()) {
+                    alert("Raum-Code nicht gefunden!");
+                    return;
+                }
+
+                currentRoomId = code;
+                gameState.gameMode = 'ONLINE';
+                gameState.playerColor = PLAYER_BROWN;
+
+                subscribeToRoom(currentRoomId);
+                updateOnlineRoomUI(code);
+                closeModal();
+                addLog(`Dem Raum ${code} beigetreten! Du bist ReSales (Blau).`);
+            } catch (err) {
+                console.error("Fehler beim Beitreten:", err);
+                alert("Fehler beim Beitreten des Raumes.");
+            }
+        }
+
+        function addLog(msg) {
+            const chatBox = document.getElementById('chat-messages');
+            const entry = document.createElement('div');
+            entry.className = 'text-amber-200/80 text-[11px] font-mono leading-tight py-0.5 border-b border-brass/5';
+            entry.innerText = `[${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}] ${msg}`;
+            chatBox.appendChild(entry);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function renderChat(messages) {
+            const chatBox = document.getElementById('chat-messages');
+            chatBox.innerHTML = '';
+            messages.forEach(m => {
+                const entry = document.createElement('div');
+                entry.className = 'text-xs py-0.5';
+                entry.innerHTML = `<span class="text-brass font-bold">${m.sender}:</span> <span class="text-amber-100">${m.text}</span>`;
+                chatBox.appendChild(entry);
+            });
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function updateOnlineRoomUI(code) {
+            document.getElementById('online-room-info').classList.remove('hidden');
+            document.getElementById('offline-room-info').classList.add('hidden');
+            document.getElementById('room-code-display').innerText = code;
+            document.getElementById('game-mode-badge').innerText = 'Online';
+        }
+
+        function triggerWin(player) {
+            sound.playWin();
+            const modal = document.getElementById('modal-winner');
+            const title = document.getElementById('winner-title');
+            const text = document.getElementById('winner-text');
+
+            title.innerText = player === PLAYER_RED ? "Sieg für TEXAID!" : "Sieg für ReSales!";
+            text.innerText = "Alle Steine wurden siegreich in den Heimathafen gebracht.";
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-menu').classList.add('hidden');
+            document.getElementById('modal-winner').classList.add('hidden');
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initBoardState();
+
+            document.getElementById('btn-roll').addEventListener('click', rollDice);
+            document.getElementById('btn-undo').addEventListener('click', undoLastMove);
+            document.getElementById('btn-end-turn').addEventListener('click', endTurn);
+
+            document.getElementById('btn-menu').addEventListener('click', () => {
+                document.getElementById('modal-menu').classList.remove('hidden');
+            });
+            document.getElementById('btn-close-modal').addEventListener('click', closeModal);
+
+            document.getElementById('mode-local').addEventListener('click', () => {
+                gameState.gameMode = 'LOCAL';
+                document.getElementById('online-settings').classList.add('hidden');
+                document.getElementById('game-mode-badge').innerText = 'Lokal';
+                initBoardState();
+                closeModal();
+            });
+
+            document.getElementById('mode-ai').addEventListener('click', () => {
+                gameState.gameMode = 'AI';
+                document.getElementById('online-settings').classList.add('hidden');
+                document.getElementById('game-mode-badge').innerText = 'Gegen KI';
+                initBoardState();
+                closeModal();
+            });
+
+            document.getElementById('mode-online').addEventListener('click', () => {
+                document.getElementById('online-settings').classList.remove('hidden');
+            });
+
+            document.getElementById('btn-open-multiplayer').addEventListener('click', () => {
+                document.getElementById('modal-menu').classList.remove('hidden');
+                document.getElementById('online-settings').classList.remove('hidden');
+            });
+
+            document.getElementById('btn-create-room').addEventListener('click', createOnlineRoom);
+            document.getElementById('btn-join-room').addEventListener('click', () => {
+                const code = document.getElementById('room-code-input').value.trim();
+                if (code.length === 6) joinOnlineRoom(code);
+            });
+
+            document.getElementById('btn-copy-code').addEventListener('click', () => {
+                const code = document.getElementById('room-code-display').innerText;
+                document.execCommand('copy');
+                addLog(`Raum-Code ${code} in die Zwischenablage kopiert.`);
+            });
+
+            document.getElementById('btn-sound').addEventListener('click', () => {
+                sound.muted = !sound.muted;
+                document.getElementById('sound-icon').className = sound.muted ? "fa-solid fa-volume-xmark" : "fa-solid fa-volume-high";
+            });
+
+            document.getElementById('btn-restart').addEventListener('click', () => {
+                initBoardState();
+                closeModal();
+            });
+            document.getElementById('btn-winner-restart').addEventListener('click', () => {
+                initBoardState();
+                closeModal();
+            });
+
+            document.getElementById('chat-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const input = document.getElementById('chat-input');
+                const text = input.value.trim();
+                if (!text) return;
+
+                if (gameState.gameMode === 'ONLINE' && currentRoomId && db) {
+                    const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
+                    const docSnap = await getDoc(roomRef);
+                    if (docSnap.exists()) {
+                        const chatData = docSnap.data().chat || [];
+                        chatData.push({
+                            sender: gameState.playerColor === PLAYER_RED ? 'TEXAID' : 'ReSales',
+                            text: text
+                        });
+                        await updateDoc(roomRef, { chat: chatData });
+                    }
+                } else {
+                    addLog(`[Ich]: ${text}`);
+                }
+                input.value = '';
+            });
+        });
+    </script>
+</body>
+</html>
